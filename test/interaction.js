@@ -165,6 +165,80 @@
 
 		});
 
+		describe('blurring the input', function() {
+			it('should close dropdown when createOnBlur is true', function(done) {
+				var test = setup_test('<select multiple="multiple">' +
+					'<option></option>' +
+					'<option value="a">A</option>' +
+					'<option value="b">B</option>' +
+				'</select>', {
+					createOnBlur: true,
+					create: function(value){
+						return {
+							value: value,
+							text: value
+						};
+					}
+				});
+
+				Syn
+					.click(test.selectize.$control)
+					.type('fooo', test.selectize.$control_input)
+					.delay(0, function() {
+						expect(test.selectize.isOpen).to.be.equal(true);
+						expect(test.selectize.$dropdown.is(':visible')).to.be.equal(true);
+
+						Syn
+							.click($("#mocha")[0])
+							.delay(0, function() {
+								expect(test.selectize.isOpen).to.be.equal(false);
+								expect(test.selectize.$dropdown.is(':visible')).to.be.equal(false);
+								done();
+							});
+					});
+
+			});
+		});
+
+		describe('filtering created items', function() {
+			function createFilterTest(createFilter) {
+				return setup_test('<select multiple="multiple"></select>', {create: true, createFilter: createFilter});
+			}
+
+			var text = 'abc';
+
+			function execFilterTest(test, done, expectation) {
+				var selectize = test.selectize;
+				Syn.click(selectize.$control).type(text, selectize.$control_input).type(selectize.settings.delimiter, selectize.$control_input).delay(0, function() {
+					expectation(selectize);
+					done();
+				});
+			}
+
+			function execFilterTests(heading, filters, expectation) {
+				for (var i = 0; i < filters.length; i++) {
+					(function(filter) {
+						it(heading, function(done) {
+							execFilterTest(createFilterTest(filter), done, expectation);
+						});
+					})(filters[i]);
+				}
+			}
+
+			execFilterTests('should add an item  normally if there is no createFilter', [undefined, null, ''], function(selectize) {
+				expect(selectize.getItem(text).length).to.be.equal(1);
+			});
+
+			execFilterTests('should add an item if the input matches the createFilter', ['a', /a/, function() { return true; }], function(selectize) {
+				expect(selectize.getItem(text).length).to.be.equal(1);
+			});
+
+			execFilterTests('should not add an item or display the create label if the input does not match the createFilter', ['foo', /foo/, function() { return false; }], function(selectize) {
+				expect(selectize.getItem(text).length).to.be.equal(0);
+				expect($(selectize.$dropdown_content).filter('.create').length).to.be.equal(0);
+			});
+ 		});
+
 	});
 
 })();

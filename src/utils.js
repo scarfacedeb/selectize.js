@@ -22,10 +22,10 @@ var isset = function(object) {
  *   1         -> '1'
  *
  * @param {string} value
- * @returns {string}
+ * @returns {string|null}
  */
 var hash_key = function(value) {
-	if (typeof value === 'undefined' || value === null) return '';
+	if (typeof value === 'undefined' || value === null) return null;
 	if (typeof value === 'boolean') return value ? '1' : '0';
 	return value + '';
 };
@@ -250,6 +250,10 @@ var transferStyles = function($from, $to, properties) {
  * @returns {int}
  */
 var measureString = function(str, $parent) {
+	if (!str) {
+		return 0;
+	}
+
 	var $test = $('<test>').css({
 		position: 'absolute',
 		top: -99999,
@@ -283,13 +287,16 @@ var measureString = function(str, $parent) {
  * @param {object} $input
  */
 var autoGrow = function($input) {
-	var update = function(e) {
+	var currentWidth = null;
+
+	var update = function(e, options) {
 		var value, keyCode, printable, placeholder, width;
 		var shift, character, selection;
 		e = e || window.event || {};
+		options = options || {};
 
 		if (e.metaKey || e.altKey) return;
-		if ($input.data('grow') === false) return;
+		if (!options.force && $input.data('grow') === false) return;
 
 		value = $input.val();
 		if (e.type && e.type.toLowerCase() === 'keydown') {
@@ -319,13 +326,14 @@ var autoGrow = function($input) {
 			}
 		}
 
-		placeholder = $input.attr('placeholder') || '';
-		if (!value.length && placeholder.length) {
+		placeholder = $input.attr('placeholder');
+		if (!value && placeholder) {
 			value = placeholder;
 		}
 
 		width = measureString(value, $input) + 4;
-		if (width !== $input.width()) {
+		if (width !== currentWidth) {
+			currentWidth = width;
 			$input.width(width);
 			$input.triggerHandler('resize');
 		}
