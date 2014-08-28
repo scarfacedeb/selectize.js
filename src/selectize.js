@@ -540,7 +540,6 @@ $.extend(Selectize.prototype, {
 		var self = this;
 		var wasFocused = self.isFocused;
 
-		self.isFocused = true;
 		if (self.isDisabled) {
 			self.blur();
 			e && e.preventDefault();
@@ -548,6 +547,7 @@ $.extend(Selectize.prototype, {
 		}
 
 		if (self.ignoreFocus) return;
+		self.isFocused = true;
 		if (self.settings.preload === 'focus') self.onSearchChange('');
 
 		if (!wasFocused) self.trigger('focus');
